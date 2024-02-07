@@ -5,7 +5,7 @@ Johnson T.F.
 # Biodiversity trend analysis
 
 This repository contains all information needed to reproduce the
-analyses of \[CENSORED - AWAITING PUBLICATION\].
+analyses of 'Non-random data structures mask trends in global biodiversity'.
 
 The repository contains four key Rmarkdown documents, which should be
 run in the following order:
@@ -25,8 +25,7 @@ model.Rmd - This script draws on additional scripts to analyse and store
 the manipulated data
 
 visualise.Rmd - This script presents the model outputs, summaries and
-figures needed to reproduce the analyses presented in \[CENSORED -
-AWAITING PUBLICATION\]
+figures needed to reproduce the analyses presented in 'Non-random data structures mask trends in global biodiversity'
 
 Each of these scripts contains comprehensive annotation. However, if any
 questions related to the analyses remain, please contact me
