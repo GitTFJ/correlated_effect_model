@@ -1,0 +1,10 @@
+((TS=(insect OR plant OR vertebrate OR mammal OR bird OR fish OR reptile OR amphibian OR arthropod OR invertebrate)) AND TS=(population)) AND TS=(trend) AND TS=(abundance OR density)
+
+Search in the Web of science core collection. TS describes 'topic' which includes the title, abstract and keywords
+
+Between 01-01-2010 and 01-03-2023
+
+Within the following journals: Nature, Nature communications, Nature Ecology and Evolution, Science, Science Advances, Ecology, PNAS, Journal of Ecology, Journal of Animal Ecology; Global Chnage Biology, Global Ecology and Biogeography, Journal of Biogeography
+
+282 titles identified. 1 title has been retracted and so removed; down to 281
+

@@ -1,0 +1,7 @@
+"SITECODE","LCODE","FIELDNAME","FROM_DATE","TO_DATE","DATETYPE","CONTINUING","DESCRIPTION"
+"T02","01","",01-JAN-94,31-DEC-96,"R","N","Weather data in table d2ib for Glensaugh applies to the lowland transect only (lcode 01). Weather data for upland transect 02 is to be estimated from past records"
+"T02","02","",01-JAN-94,31-DEC-96,"R","N","Weather data in table d2ib for Glensaugh applies to the lowland transect only (lcode 01). Weather data for upland transect 02 is to be estimated from past records"
+"T06","01","IB_SPEC",01-JAN-93,31-DEC-96,"R","Y","IB code 120 - Small Skipper - contains small skippers plus those individuals unable to distinguish between Small and Essex Skippers - not ideal, but an interim solution until we adopt a hierarchical system of coding"
+"T08","01","",27-MAY-04,27-MAY-04,"D","N","There were two walks on 27/5/04.  Mike Morecroft was training Jo Brown to do the transect.  (confirmed in email from David Roy 22/3/05)"
+"T09","01","IB_SPEC",01-JAN-93,31-DEC-96,"R","Y","IB code 120 - Small Skipper - contains small skippers plus those individuals unable to distinguish between Small and Essex Skippers - not ideal, but an interim solution until we adopt a hierarchical system of coding"
+"T10","01","IB_SPEC",01-JAN-94,31-DEC-96,"R","Y","IB code 120 - Small Skipper - contains small skippers plus those individuals unable to distinguish between Small and Essex Skippers - not ideal, but an interim solution until we adopt a hierarchical system of coding"

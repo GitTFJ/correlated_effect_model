@@ -1,0 +1,126 @@
+---
+title: "model"
+author: "Johnson T.F."
+output: pdf_document
+---
+
+The models require approximately 20GB RAM to run, and will take in excess of 14 days without the use of a computing cluster. With that in mind, we have hash-tagged out the code to run the models (which are stored in source script) within the Rmarkdown document. We run the models in a variety of scenarios (described below) and within each model we store (for each dataset seperately) the model output (e.g. model summary, predicted values etc.). Each source script is annotated, but the core strucutre is most thoroughogly described here:
+
+```{r, tutorial, message = FALSE, eval = FALSE}
+library(INLA)
+library(brinla)
+
+#This script would be ran for each dataset.
+message("   Model 1 - Intercept model")
+
+#For all random effects, we set an improper uniform hyper prior. 
+
+prior_prec = "expression:
+  log_dens = 0 - log(2) - theta / 2;
+  return(log_dens);
+"
+
+m1 = inla(log_abundance ~ #log abundance is the response
+            year_centre + #centered year
+            f(site_spec_code,  model = "iid", constr = F, hyper = prior_prec) + #independent random intercept for each population
+            f(tips_code, model = "iid", constr = F, hyper = prior_prec) + #independent random intercept for each species
+            f(genus_code, model = "iid", constr = F, hyper = prior_prec) + #independent random intercept for each genera
+            # Note: INLA does not require explicitly defining a nested structure in the model formula. Instead, its important to ensure the coding used for the random effects are unique and represent this nested structure. See here for guidance: https://groups.google.com/g/r-inla-discussion-group/c/vhf_qY4tvX0/m/cVXvIxbrBwAJ
+            f(site_code, model = "iid", constr = F, hyper = prior_prec) +
+            #independent random intercept for each site
+            f(region_code, model = "iid", constr = F, hyper = prior_prec), #independent random intercept for each region
+            data = analysis_list[[a]][[1]],  #Using the data from 'manipulate.Rmd'
+            family = "gaussian", #A gaussian error distribution
+            control.predictor=list(compute=TRUE), #Save the predicted values
+            control.fixed = list(mean.intercept = 0, prec.intercept = 0.001, #Set a prior on the intercept of N(0,1000)
+                                 mean = 0, prec = 1), #Set a prior on the fixed effect coefficient of N(0,1)
+            num.threads = 4) #Number of cores to run the model on. Lots of cores can actually slow things down, so you are better going for fewer cores IMO.
+
+message("   Model 2 - Slope model")
+m2 = inla(cent_abundance ~ #Each abundance time series is centered now too. Every line passes through zero on both axes
+            year_centre +
+            f(site_spec_code, year_centre, model = "iid", constr = F, hyper = prior_prec) + #All random intercepts described above are now random slopes
+            f(tips_code, year_centre, model = "iid", constr = F, hyper = prior_prec) +
+            f(genus_code, year_centre, model = "iid", constr = F, hyper = prior_prec) +
+            f(site_code, year_centre, model = "iid", constr = F, hyper = prior_prec) +
+            f(region_code, year_centre, model = "iid", constr = F, hyper = prior_prec),
+            data = analysis_list[[a]][[1]],  family = "gaussian", 
+            control.predictor=list(compute=TRUE),
+            control.fixed = list(mean.intercept = 0, prec.intercept = 0.001,
+                                 mean = 0, prec = 1),
+            num.threads = 4)
+
+m2_sig = bri.hyperpar.summary(m2)[1,4] #Residual standard deviation
+ar_prior = list(theta1 = list(prior="pc.prec", param=c(m2_sig*3, 0.01)), #penalised complexity prior statement, where we state the odds of the standard deviation captured by the ar1 term exceeding 3*residual standard deviation are very small (probabaility = 0.01)
+                theta2 = list(prior="pc.cor1", param=c(0, 0.9), initial = 0)) #Here we state the odds of detecting some autocorrelation (rho greater than 0) are very high (probability of 0.9). We set the inital rho at 0.
+
+#Need aadditional indicator variables
+message("   Model 3 - Correlation model")
+  m3 = inla(cent_abundance ~ 
+              year_centre +
+              f(year3, model = "ar1", replicate = site_spec_code2, hyper = ar_prior) + #We specify that abundance observations within population time-series should be ar-1 temporally autocorrelated
+              f(site_spec_code, year_centre, model = "iid", 
+                constr = F, hyper = prior_prec) +
+              f(tips_code2, model = "generic0", 
+                constr = F, Cmatrix = analysis_list[[a]][[2]], hyper = prior_prec) + #We specify that species should covary accoriding to a phylogenetic covariance matrix (Cmatrix argument). 
+              f(tips_code, year_centre, model = "iid", 
+                constr = F, hyper = prior_prec) +
+              f(genus_code, year_centre, model = "iid", 
+                constr = F, hyper = prior_prec) +
+              f(site_code2, year_centre, model = "generic0", 
+                constr = F, Cmatrix = analysis_list[[a]][[3]], hyper = prior_prec) + #We specify that sites should covary accoriding to a spatial covariance matrix (Cmatrix argument). 
+              f(site_code, year_centre, model = "iid", 
+                constr = F, hyper = prior_prec) +
+              f(region_code, year_centre, model = "iid", 
+                constr = F, hyper = prior_prec),
+            data = analysis_list[[a]][[1]], family = "gaussian", 
+            control.predictor=list(compute=TRUE),
+            control.fixed = list(mean.intercept = 0, prec.intercept = 0.001,
+                                 mean = 0, prec = 1),
+            num.threads = 4)
+  
+  #In all of these models we set constr = F. When constr = T INLA applies sum to zero constraint. Through simulations it was apparent that setting this to TRUE led to inconsistent performance. In contrast, when set to FALSE, the outputs are very similar to that in brms.
+```
+
+The 'core' models are those presented in the main text
+```{r, modelling_core, message = FALSE, eval = FALSE}
+source("modelling_core.R")
+```
+
+The 'phylogeny' models explore how inference in the correlated effect model changes as you move from the Open Tree of Life phylogeny (which lacks branch lengths) to the TimeTree phylogeny (which has brench lengths, but less species).
+```{r, modelling_phylo, message = FALSE, eval = FALSE}
+source("modelling_phylo.R")
+```
+
+The 'sensitivity to structure' models explore how the addition of each correlative component (e.g. spatial covariance, phylogenetic covariance, temporal correlation) impact inference (particularly uncertainty around the collective trend)
+```{r, modelling_struc, message = FALSE, eval = FALSE}
+source("modelling_structure.R")
+```
+
+The 'abundance' models explore how well each model can predict the final (missing) abundance values within half of the time-series
+```{r, modelling_abun, message = FALSE, eval = FALSE}
+source("modelling_abundance.R")
+```
+
+The 'trends' models explore how well each model can predict missing population trends in each dataset
+```{r, modelling_trends, message = FALSE, eval = FALSE}
+source("modelling_trends.R")
+```
+
+The 'predict2' models are used to generate predictions across space and phylogenies within the BioTIME dataset
+```{r, modelling_predict2, message = FALSE, eval = FALSE}
+source("modelling_predict2.R")
+```
+
+
+# Reproducibility
+
+Date rendered
+```{r, get_time, echo = FALSE}
+lubridate::now()
+```
+  
+Session info
+```{r, get_sessioninfo, echo = FALSE}
+sessionInfo()
+```

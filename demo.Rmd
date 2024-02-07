@@ -1,0 +1,121 @@
+---
+title: "Readme"
+author: "Johnson T.F."
+output: github_document
+---
+
+# Biodiversity trend analysis
+
+This repository contains all information needed to reproduce the analyses of [CENSORED - AWAITING PUBLICATION].
+
+The repository contains four key Rmarkdown documents, which should be run in the following order:
+
+data_compile.Rmd - This script compiles trend datasets into one common trend database. All of the data are openly available and the script either automatically downloads the datasets, or when data license agreements need to be signed (as in the Living Planet), offers clear instructions on how the data should be downloaded and stored. Once downloaded the datasets are cleaned and compiled in a coherent fashion.
+
+manipulate.Rmd - This script manipulates each of the compiled datasets into standard formats, appends spatial and phylogenetic structures, conducts data transformations, and prepares the data for analysis
+
+model.Rmd - This script draws on additional scripts to analyse and store the manipulated data
+
+visualise.Rmd - This script presents the model outputs, summaries and figures needed to reproduce the analyses presented in [CENSORED - AWAITING PUBLICATION]
+
+Each of these scripts contains comprehensive annotation. However, if any questions related to the analyses remain, please contact me T.F.JOHNSON(AT)SHEFFIELD.AC.UK
+
+This is part of a larger project aimed to improve macro-scale bidoiversity models/statistics. If you are interested in working together, please get in touch!
+
+### Load packages
+```{r load_packages, warning = FALSE, message = FALSE}
+library(INLA)
+library(brinla)
+```
+
+### Load data
+```{r load_data, warning = FALSE, message = FALSE}
+df = readRDS("../data/derived_data/analysis_list_tutorial.rds") #This is the CaPTrends data
+```
+
+### Set prior
+```{r prior, warning = FALSE, message = FALSE}
+prior_prec = "expression:
+  log_dens = 0 - log(2) - theta / 2;
+  return(log_dens);
+" #This is a uniform prior set on the hyperparameters of the random effects (e.g. random effect precision)
+```
+
+### Run random intercept model
+```{r model1, warning = FALSE, message = FALSE}
+m1 = inla(log_abundance ~ #log abundance is the ressonse
+            year_centre + #centred year
+            f(site_spec_code,  model = "iid", constr = F, hyper = prior_prec) + #independent random intercept for each population
+            f(tips_code, model = "iid", constr = F, hyper = prior_prec) + #independent random intercept for each species
+            f(genus_code, model = "iid", constr = F, hyper = prior_prec) + #independent random intercept for each genera
+            # Note: INLA does not require explicitly defining a nested structure in the model formula. Instead, its important to ensure the coding used for the random effects are unique and represent this nested structure. See here for guidance: https://groups.google.com/g/r-inla-discussion-group/c/vhf_qY4tvX0/m/cVXvIxbrBwAJ
+            f(site_code, model = "iid", constr = F, hyper = prior_prec) +
+            #independent random intercept for each site
+            f(region_code, model = "iid", constr = F, hyper = prior_prec), #independent random intercept for each region
+          data = df[[1]],  #Using the data from 'manipulate.Rmd'
+          family = "gaussian", #A gaussian error distribution
+          control.predictor=list(compute=TRUE), #Save the predicted values
+          control.fixed = list(mean.intercept = 0, prec.intercept = 0.001, #Set a prior on the intercept of N(0,1000)
+                               mean = 0, prec = 1), #Set a prior on the fixed effect coefficient of N(0,1)
+          num.threads = 4) #Number of cores to run the model on. Lots of cores can actually slow things down, so you are better going for fewer cores IMO.
+summary(m1)
+```
+
+### Run random slope model
+```{r model2, warning = FALSE, message = FALSE}
+message("   Model 2 - Slope model")
+m2 = inla(cent_abundance ~ #Each abundance time series is centered now too. Every line passes through zero on both axes
+            year_centre +
+            f(site_spec_code, year_centre, model = "iid", constr = F, hyper = prior_prec) + #All random intercepts described above are now random slopes
+            f(tips_code, year_centre, model = "iid", constr = F, hyper = prior_prec) +
+            f(genus_code, year_centre, model = "iid", constr = F, hyper = prior_prec) +
+            f(site_code, year_centre, model = "iid", constr = F, hyper = prior_prec) +
+            f(region_code, year_centre, model = "iid", constr = F, hyper = prior_prec),
+          data = df[[1]],  family = "gaussian", 
+          control.predictor=list(compute=TRUE),
+          control.fixed = list(mean.intercept = 0, prec.intercept = 0.001,
+                               mean = 0, prec = 1),
+          num.threads = 4)
+summary(m2)
+```
+
+### Run correlated effect model
+```{r model3, warning = FALSE, message = FALSE}
+m2_sig = bri.hyperpar.summary(m2)[1,4] #Residual standard deviation
+ar_prior = list(theta1 = list(prior="pc.prec", param=c(m2_sig*3, 0.01)), #penalised complexity prior statement, where we state the odds of the standard deviation captured by the ar1 term exceeding 3*residual standard deviation are very small (probabaility = 0.01)
+                theta2 = list(prior="pc.cor1", param=c(0, 0.9), initial = 0)) #Here we state the odds of detecting some autocorrelation (rho greater than 0) are very high (probability of 0.9). We set the inital rho at 0.
+
+#Need aadditional indicator variables
+message("   Model 3 - Correlation model")
+m3 = inla(cent_abundance ~ 
+            year_centre +
+            f(year3, model = "ar1", replicate = site_spec_code2, hyper = ar_prior) + #We specify that abundance observations within population time-series should be ar-1 temporally autocorrelated
+            f(site_spec_code, year_centre, model = "iid", 
+              constr = F, hyper = prior_prec) +
+            f(tips_code2, year_centre, model = "generic0", 
+              constr = F, Cmatrix = df[[2]], hyper = prior_prec) + #We specify that species should covary accoriding to a phylogenetic covariance matrix (Cmatrix argument). 
+            f(tips_code, year_centre, model = "iid", 
+              constr = F, hyper = prior_prec) +
+            f(genus_code, year_centre, model = "iid", 
+              constr = F, hyper = prior_prec) +
+            f(site_code2, year_centre, model = "generic0", 
+              constr = F, Cmatrix = df[[3]], hyper = prior_prec) + #We specify that sites should covary accoriding to a spatial covariance matrix (Cmatrix argument). 
+            f(site_code, year_centre, model = "iid", 
+              constr = F, hyper = prior_prec) +
+            f(region_code, year_centre, model = "iid", 
+              constr = F, hyper = prior_prec),
+          data = df[[1]], family = "gaussian", 
+          control.predictor=list(compute=TRUE),
+          control.fixed = list(mean.intercept = 0, prec.intercept = 0.001,
+                               mean = 0, prec = 1),
+          num.threads = 4)
+summary(m3)
+```
+```{r, get_time, echo = FALSE}
+lubridate::now()
+```
+  
+Session info
+```{r, get_sessioninfo, echo = FALSE}
+sessionInfo()
+```
