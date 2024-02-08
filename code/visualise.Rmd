@@ -1566,8 +1566,8 @@ for(a in names(analysis_list)[c(1:10)]){
   tmp_df = subset(miss_t, code == a)
   tmp_mae_full = data.frame(
     code = a,
-    mae2 = median(abs(abs(tmp_df$tr - tmp_df$m2)/tmp_df$m2)*100),
-    mae3 = median(abs(abs(tmp_df$tr - tmp_df$m3)/tmp_df$m3)*100)
+    mae2 = median(abs(abs(tmp_df$tr - tmp_df$m2)/tmp_df$tr)*100),
+    mae3 = median(abs(abs(tmp_df$tr - tmp_df$m3)/tmp_df$tr)*100)
   )
   mae_full = rbind(mae_full, tmp_mae_full)
 }
@@ -1612,9 +1612,9 @@ for(a in names(analysis_list)[c(1:10)]){
 cmb_preds = subset(cmb_preds, miss == "Missing")
 cmb_preds$pred2 = cmb_preds$pred2 + cmb_preds$mean_log
 cmb_preds$pred3 = cmb_preds$pred3 + cmb_preds$mean_log
-cmb_preds$diff1 = abs(abs(cmb_preds$log_abundance - cmb_preds$pred1)/cmb_preds$pred1)*100
-cmb_preds$diff2 = abs(abs(cmb_preds$log_abundance - cmb_preds$pred2)/cmb_preds$pred2)*100
-cmb_preds$diff3 = abs(abs(cmb_preds$log_abundance - cmb_preds$pred3)/cmb_preds$pred3)*100
+cmb_preds$diff1 = abs(abs(cmb_preds$log_abundance - cmb_preds$pred1)/cmb_preds$log_abundance)*100
+cmb_preds$diff2 = abs(abs(cmb_preds$log_abundance - cmb_preds$pred2)/cmb_preds$log_abundance)*100
+cmb_preds$diff3 = abs(abs(cmb_preds$log_abundance - cmb_preds$pred3)/cmb_preds$log_abundance)*100
 
 
 sum_preds = cmb_preds %>%
