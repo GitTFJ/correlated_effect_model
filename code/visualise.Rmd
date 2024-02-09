@@ -442,9 +442,9 @@ for(a in c(1:10)){
   y2 = c(100)
   y3 = c(100)
   for(tim in 1:(run)){
-    y1 = c(y1,y1[tim]*(1 + df_tmp$coef[1]))
-    y2 = c(y2,y2[tim]*(1 + df_tmp$coef[2]))
-    y3 = c(y3,y3[tim]*(1 + df_tmp$coef[3]))
+    y1 = c(y1,y1[tim]*(exp(df_tmp$coef[1])))
+    y2 = c(y2,y2[tim]*(exp(df_tmp$coef[2])))
+    y3 = c(y3,y3[tim]*(exp(df_tmp$coef[3])))
   }
   
   
@@ -452,9 +452,9 @@ for(a in c(1:10)){
   lc2 = c(100)
   lc3 = c(100)
   for(tim in 1:(run)){
-    lc1 = c(lc1,lc1[tim]*(1 + df_tmp$coef_lc5[1]))
-    lc2 = c(lc2,lc2[tim]*(1 + df_tmp$coef_lc5[2]))
-    lc3 = c(lc3,lc3[tim]*(1 + df_tmp$coef_lc5[3]))
+    lc1 = c(lc1,lc1[tim]*(exp(df_tmp$coef_lc5[1])))
+    lc2 = c(lc2,lc2[tim]*(exp(df_tmp$coef_lc5[2])))
+    lc3 = c(lc3,lc3[tim]*(exp(df_tmp$coef_lc5[3])))
   }
   
   
@@ -462,9 +462,9 @@ for(a in c(1:10)){
   uc2 = c(100)
   uc3 = c(100)
   for(tim in 1:(run)){
-    uc1 = c(uc1,uc1[tim]*(1 + df_tmp$coef_uc5[1]))
-    uc2 = c(uc2,uc2[tim]*(1 + df_tmp$coef_uc5[2]))
-    uc3 = c(uc3,uc3[tim]*(1 + df_tmp$coef_uc5[3]))
+    uc1 = c(uc1,uc1[tim]*(exp(df_tmp$coef_uc5[1])))
+    uc2 = c(uc2,uc2[tim]*(exp(df_tmp$coef_uc5[2])))
+    uc3 = c(uc3,uc3[tim]*(exp(df_tmp$coef_uc5[3])))
   }
   
   projections_tmp = data.frame(
@@ -519,7 +519,7 @@ plt3 =   ggplot(data = projections_cmb[projections_cmb$code  %in% unique(project
   geom_line(aes(x = year, y3), colour = m3_col) +
   geom_ribbon(aes(x = year, ymin = lc3, ymax = uc3), alpha = 0.1, fill = m3_col) +
   geom_hline(aes(yintercept = 100), colour= "grey", linetype = "dotted") +
-  scale_x_continuous(expand = c(0,0), breaks = c(1970,1995,2020), limits = c(1966, 2023)) +
+  scale_x_continuous(expand = c(0,0), breaks = c(1975,1995,2015), limits = c(1966, 2023)) +
   scale_y_log10(expand = c(0,0), breaks =  c(50,75,100,125)) +
   coord_cartesian(ylim = c(45,130)) +
   labs(x = " ", y = "") +
@@ -667,6 +667,7 @@ plt10 = ggplot(data = projections_cmb[projections_cmb$code  %in% unique(projecti
 
 ggarrange(plt1, plt2, plt3, plt4, plt5, plt6, plt7, plt8, plt9, plt10, ncol = 5, nrow = 2, common.legend = T, legend = "top", align = "hv")
 write.csv(projections_cmb, "../data/derived_data/fig2.csv")
+ggsave(file="../outputs/figures/fig2.svg", width=12, height=7)
 ```
 
 #Figure 3
@@ -887,9 +888,9 @@ for(a in 1:nrow(region_site_link)){
     year_centre = seq(-20,20,length.out = 30),
     year_adj = seq(-20,20,length.out = 30) + subset(expand_reg_sit_link, site_code == region_site_link$site_code[a])$mean_year[1],
     mn_lg = mn_lg,
-    y1 = 4.72 + -0.004*c(seq(-20,20,length.out = 30)) + region_site_link$m1_med[a], #2.801 -0.002
-    y2 = 4.72 + (-0.001 + region_site_link$m2_med[a])*c(seq(-20,20,length.out = 30)), #-0.002
-    y3 = 4.72 + (-0.008 + region_site_link$m3_med[a])*c(seq(-20,20,length.out = 30))) #-0.002
+    y1 = 4.72 + -0.004*c(seq(-20,20,length.out = 30)) + region_site_link$m1_med[a], 
+    y2 = 4.72 + (-0.001 + region_site_link$m2_med[a])*c(seq(-20,20,length.out = 30)), 
+    y3 = 4.72 + (-0.008 + region_site_link$m3_med[a])*c(seq(-20,20,length.out = 30))) 
   cmb_df = rbind(cmb_df, tmp_df)
 }
 
@@ -963,9 +964,9 @@ ab_lc = c(100)
 ab_mn = c(100)
 ab_uc = c(100)
 for(a in c(1:28)){
-  ab_lc = c(ab_lc,ab_lc[a]*(1 + inla.hpdmarginal(0.5, example_dat[[1]]$marginals.fixed[[2]])[1]))
-  ab_mn = c(ab_mn,ab_mn[a]*(1 + example_dat[[1]]$summary.fixed$`0.5quant`[2]))
-  ab_uc = c(ab_uc,ab_uc[a]*(1 + inla.hpdmarginal(0.5, example_dat[[1]]$marginals.fixed[[2]])[2]))
+  ab_lc = c(ab_lc,ab_lc[a]*(exp(inla.hpdmarginal(0.5, example_dat[[1]]$marginals.fixed[[2]])[1])))
+  ab_mn = c(ab_mn,ab_mn[a]*(exp(example_dat[[1]]$summary.fixed$`0.5quant`[2])))
+  ab_uc = c(ab_uc,ab_uc[a]*(exp(inla.hpdmarginal(0.5, example_dat[[1]]$marginals.fixed[[2]])[2])))
 }
 example_dat_proj_m1 = data.frame(
   year = c(1987:2015),
@@ -983,7 +984,7 @@ plt_m1_d = ggplot(example_dat_proj_m1) +
   scale_x_continuous(expand = c(0,0), breaks = c(1990, 2000, 2010)) +
   coord_cartesian(ylim  = c(75,125)) +
   theme_classic() +
-  labs(x = "Year", y = "Projected\nabundance", title = "")
+  labs(x = "", y = "Projected\nabundance", title = "")
 
 
 
@@ -991,9 +992,9 @@ ab_lc = c(100)
 ab_mn = c(100)
 ab_uc = c(100)
 for(a in c(1:28)){
-  ab_lc = c(ab_lc,ab_lc[a]*(1 + inla.hpdmarginal(0.5, example_dat[[2]]$marginals.fixed[[2]])[1]))
-  ab_mn = c(ab_mn,ab_mn[a]*(1 + example_dat[[2]]$summary.fixed$`0.5quant`[2]))
-  ab_uc = c(ab_uc,ab_uc[a]*(1 + inla.hpdmarginal(0.5, example_dat[[2]]$marginals.fixed[[2]])[2]))
+  ab_lc = c(ab_lc,ab_lc[a]*(exp(inla.hpdmarginal(0.5, example_dat[[2]]$marginals.fixed[[2]])[1])))
+  ab_mn = c(ab_mn,ab_mn[a]*(exp(example_dat[[2]]$summary.fixed$`0.5quant`[2])))
+  ab_uc = c(ab_uc,ab_uc[a]*(exp(inla.hpdmarginal(0.5, example_dat[[2]]$marginals.fixed[[2]])[2])))
 }
 example_dat_proj_m2 = data.frame(
   year = c(1987:2015),
@@ -1010,7 +1011,7 @@ plt_m2_d = ggplot(example_dat_proj_m2) +
   scale_x_continuous(expand = c(0,0), breaks = c(1990, 2000, 2010)) +
   coord_cartesian(ylim  = c(75,125)) +
   theme_classic() +
-  labs(x = "Year", y = "Projected\nabundance", title = "")
+  labs(x = "", y = "Projected\nabundance", title = "")
 
 
 
@@ -1018,9 +1019,9 @@ ab_lc = c(100)
 ab_mn = c(100)
 ab_uc = c(100)
 for(a in c(1:28)){
-  ab_lc = c(ab_lc,ab_lc[a]*(1 + inla.hpdmarginal(0.5, example_dat[[3]]$marginals.fixed[[2]])[1]))
-  ab_mn = c(ab_mn,ab_mn[a]*(1 + example_dat[[3]]$summary.fixed$`0.5quant`[2]))
-  ab_uc = c(ab_uc,ab_uc[a]*(1 + inla.hpdmarginal(0.5, example_dat[[3]]$marginals.fixed[[2]])[2]))
+  ab_lc = c(ab_lc,ab_lc[a]*(exp(inla.hpdmarginal(0.5, example_dat[[3]]$marginals.fixed[[2]])[1])))
+  ab_mn = c(ab_mn,ab_mn[a]*(exp(example_dat[[3]]$summary.fixed$`0.5quant`[2])))
+  ab_uc = c(ab_uc,ab_uc[a]*(exp(inla.hpdmarginal(0.5, example_dat[[3]]$marginals.fixed[[2]])[2])))
 }
 example_dat_proj_m3 = data.frame(
   year = c(1987:2015),
@@ -1037,7 +1038,7 @@ plt_m3_d = ggplot(example_dat_proj_m3) +
   scale_x_continuous(expand = c(0,0), breaks = c(1990, 2000, 2010)) +
   coord_cartesian(ylim  = c(75,125)) +
   theme_classic() +
-  labs(x = "Year", y = "Projected\nabundance", title = "")
+  labs(x = "", y = "Projected\nabundance", title = "")
 
 
 ggarrange(
@@ -1055,6 +1056,7 @@ ggarrange(
   plt_m3_d,
   ncol =4, nrow = 3, common.legend = T)
 write.csv(rbind(example_dat_proj_m1, example_dat_proj_m2, example_dat_proj_m3), "../data/derived_data/fig3d.csv")
+ggsave(file="../outputs/figures/fig3.svg", width=9, height=7)
 ```
 
 # Figure 4
@@ -1374,7 +1376,7 @@ plt_clad = gheatmap(p, plt_trends, width = 0.2, colnames = F) +
 
 
 ggarrange(plt_clad, plt_map, ncol = 1, labels = c("A", "B"), common.legend = T, heights = c(1.2,0.65), legend = "bottom")
-
+ggsave(file="../outputs/figures/fig4.svg", width=6, height=10)
 write.csv(plt_trends, "../data/derived_data/fig4b.csv")
 ```
 
@@ -1574,14 +1576,11 @@ for(a in names(analysis_list)[c(1:10)]){
 
 mean(mae_full$mae2)
 sd(mae_full$mae2)
-median(mae_full$mae2)
 
 mean(mae_full$mae3)
 sd(mae_full$mae3)
-median(mae_full$mae3)
 
 mean(mae_full$mae2)/mean(mae_full$mae3)
-median(mae_full$mae2)/median(mae_full$mae3)
 
 
 ```
@@ -1620,20 +1619,15 @@ cmb_preds$diff3 = abs(abs(cmb_preds$log_abundance - cmb_preds$pred3)/cmb_preds$l
 sum_preds = cmb_preds %>%
   group_by(code) %>%
   summarise(mn1 = median(diff1), mn2 = median(diff2), mn3 = median(diff3))
-#sum_preds$mn1 = signif(sum_preds$mn1, 3)
-#sum_preds$mn2 = signif(sum_preds$mn2, 3)
-#sum_preds$mn3 = signif(sum_preds$mn3, 3)
+
 mean(sum_preds$mn1)
 sd(sum_preds$mn1)
-median(sum_preds$mn1)
 
 mean(sum_preds$mn2)
 sd(sum_preds$mn2)
-median(sum_preds$mn2)
 
 mean(sum_preds$mn3)
 sd(sum_preds$mn3)
-median(sum_preds$mn3)
 
 mean(sum_preds$mn1)/mean(sum_preds$mn3)
 mean(sum_preds$mn2)/mean(sum_preds$mn3)
