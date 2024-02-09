@@ -61,7 +61,7 @@ message("   Model 3 - Correlation model")
               f(year3, model = "ar1", replicate = site_spec_code2, hyper = ar_prior) + #We specify that abundance observations within population time-series should be ar-1 temporally autocorrelated
               f(site_spec_code, year_centre, model = "iid", 
                 constr = F, hyper = prior_prec) +
-              f(tips_code2, model = "generic0", 
+              f(tips_code2, year_centre, model = "generic0", 
                 constr = F, Cmatrix = analysis_list[[a]][[2]], hyper = prior_prec) + #We specify that species should covary accoriding to a phylogenetic covariance matrix (Cmatrix argument). 
               f(tips_code, year_centre, model = "iid", 
                 constr = F, hyper = prior_prec) +
